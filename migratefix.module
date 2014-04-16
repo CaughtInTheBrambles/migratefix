@@ -1,0 +1,102 @@
+<?php
+
+/**
+* Done with credit to this article http://www.phase2technology.com/blog/entityfieldquery-let-drupal-do-the-heavy-lifting-pt-2/
+* Extend the EntityFieldQuery function to clean up later in the code
+*
+* First the Node
+*/
+class NodeEntityFieldQuery extends EntityFieldQuery {
+  // define some defaults for the class
+  public function __construct() {
+    // now we don't need to define these over and over anymore
+    $this
+      ->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->propertyOrderBy('title', 'ASC');
+    // define a pager
+
+  }
+  public function excludeNode($nid) {
+    // code snip; we'll come back to this.
+  }
+
+}
+
+/**
+* Extend the EntityFieldQuery function to clean up later in the code
+* Then the product
+*/
+class ProductEntityFieldQuery extends EntityFieldQuery {
+  // define some defaults for the class
+  public function __construct() {
+    // now we don't need to define these over and over anymore
+    $this
+      ->entityCondition('entity_type', 'product')
+      ->propertyCondition('status', 1)
+      ->propertyOrderBy('title', 'ASC');
+    // define a pager
+
+  }
+  public function excludeNode($nid) {
+    // code snip; we'll come back to this.
+  }
+
+}
+
+/**
+* Create a page to manage the process
+*/
+
+function migratefix_menu() {
+  $items['migratefix'] = array(
+    'title' => 'Migration Fix link nodes to products for cards',
+    'page callback' => 'migratefix_iteration',
+    'access arguments' => array('access content'),
+  );
+  return $items;
+}
+/**
+* create a function to do the work
+*/
+function migratefix_iteration() {
+ $nodeQuery = new NodeEntityFieldQuery
+  // set the conditions
+   $nodeQuery
+    // adjust to node product type machine name you use
+    ->entityCondition('bundle', array('publication'));
+  // run the query
+    ->$nodeResults = $nodeQuery->execute();
+
+ // check there is a result
+  if (!empty($nodeResults['node'])) {
+     // iterate through the $nodelistings results node by node
+    $nodeResults = entity_load('node', array_keys($result['node']));
+foreach ($nodeResults as $nodeResult) {
+   // This is where the magic happens
+  $nodeTitle = $nodeResults->
+ $productQuery = new ProductEntityFieldQuery
+  $productQuery
+    ->entityCondition
+}
+
+  }
+  else {
+    $nodeOutput['status']['#markup'] = t('No results were returned.');
+  }
+
+
+ // iterate through the $nodelistings results node by node
+
+
+ // get node nid and title
+
+ // for each title run a query on the $products looking for matches on title
+
+
+ // if a match found check the node id does not exist in the product reference field of the node
+ // if it does move on
+ // if not add the pid of the product and save
+ // continue until all are done
+
+}
