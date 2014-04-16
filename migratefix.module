@@ -72,22 +72,31 @@ function migratefix_iteration() {
   if (!empty($nodeResults['node'])) {
      // iterate through the $nodelistings results node by node
     //$nodeResults = entity_load('node', array_keys($result['node']));
-foreach ($nodeResults as $nodeResult) {
+    foreach ($nodeResults as $nodeResult) {
    // This is where the magic happens
-  $nodeTarget = array_keys($nodeResult['node']);
-  $nodeTargetNid = $nodeTarget->nid;
-  $nodeTargetTitle = $nodeTarget->title;
+      $nodeTarget = array_keys($nodeResult['node']);
+      $nodeTargetNid = $nodeTarget->nid;
+      $nodeTargetTitle = $nodeTarget->title;
     // create the search parameter for EnitityFieldQuery to use
-    $searchForTitle = '%' . $nodeTargetTitle . '%';
- $productQuery = new ProductEntityFieldQuery
-  $productQuery
-    ->entityCondition('bundle', array('publication'))
-    ->propertyCondition('title', $searchForTitle, 'LIKE');
-  $propertyResults = $productQuery->execute();
-  if(!empty($propertyResults)) {
+      $searchForTitle = '%' . $nodeTargetTitle . '%';
+      $productQuery = new ProductEntityFieldQuery
+        $productQuery
+        ->entityCondition('bundle', array('publication'))
+        ->propertyCondition('title', $searchForTitle, 'LIKE');
+      $productResults = $productQuery->execute();
+      if(!empty($productResults)) {
+    //this is where th fun begins
+        foreach ($productResults as $productResult) {
+          $productPid = $productResult->product_id
+          $nodeTarget->
+          // finally save the node to set the records
+           node_save($nodeTarget);
+        }
+      }
+      else {
+        $nodeOutput['status']['#markup'] = t('No results were returned.');
+      }
 
-  }
-}
 
   }
   else {
@@ -95,17 +104,6 @@ foreach ($nodeResults as $nodeResult) {
   }
 
 
- // iterate through the $nodelistings results node by node
 
-
- // get node nid and title
-
- // for each title run a query on the $products looking for matches on title
-
-
- // if a match found check the node id does not exist in the product reference field of the node
- // if it does move on
- // if not add the pid of the product and save
- // continue until all are done
 
 }
