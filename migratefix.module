@@ -71,13 +71,22 @@ function migratefix_iteration() {
  // check there is a result
   if (!empty($nodeResults['node'])) {
      // iterate through the $nodelistings results node by node
-    $nodeResults = entity_load('node', array_keys($result['node']));
+    //$nodeResults = entity_load('node', array_keys($result['node']));
 foreach ($nodeResults as $nodeResult) {
    // This is where the magic happens
-  $nodeTitle = $nodeResults->
+  $nodeTarget = array_keys($nodeResult['node']);
+  $nodeTargetNid = $nodeTarget->nid;
+  $nodeTargetTitle = $nodeTarget->title;
+    // create the search parameter for EnitityFieldQuery to use
+    $searchForTitle = '%' . $nodeTargetTitle . '%';
  $productQuery = new ProductEntityFieldQuery
   $productQuery
-    ->entityCondition
+    ->entityCondition('bundle', array('publication'))
+    ->propertyCondition('title', $searchForTitle, 'LIKE');
+  $propertyResults = $productQuery->execute();
+  if(!empty($propertyResults)) {
+
+  }
 }
 
   }
