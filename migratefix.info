@@ -1,0 +1,7 @@
+name = Migrate Fix
+description = Fix disconnected product displays and products
+package = Migrate Fix
+core = 7.x
+
+
+
