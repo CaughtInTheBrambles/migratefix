@@ -1,53 +1,51 @@
 <?php
 
 /**
-* Done with credit to this article http://www.phase2technology.com/blog/entityfieldquery-let-drupal-do-the-heavy-lifting-pt-2/
-* Extend the EntityFieldQuery function to clean up later in the code
-*
-* First the Node
-*/
+ * Done with credit to this article
+ * http://www.phase2technology.com/blog/entityfieldquery-let-drupal-do-the-heavy-lifting-pt-2/.
+ * Extend the EntityFieldQuery function to clean up later in the code.
+ *
+ * First the Node.
+ */
 class NodeEntityFieldQuery extends EntityFieldQuery {
-  // define some defaults for the class
+  /**
+   * @function constructor for node
+   */
   public function __construct() {
-    // now we don't need to define these over and over anymore
+    // Now we don't need to define these over and over anymore.
     $this
       ->entityCondition('entity_type', 'node')
       ->propertyCondition('status', 1)
       ->propertyOrderBy('title', 'ASC');
-    // define a pager
+    // Define a pager.
 
   }
-  public function excludeNode($nid) {
-    // code snip; we'll come back to this.
-  }
+
 
 }
 
 /**
-* Extend the EntityFieldQuery function to clean up later in the code
-* Then the product
-*/
+ * Extend the EntityFieldQuery function to clean up later in the code.
+ * Then the product.
+ */
 class ProductEntityFieldQuery extends EntityFieldQuery {
-  // define some defaults for the class
+  // Define some defaults for the class.
   public function __construct() {
-    // now we don't need to define these over and over anymore
+    // Now we don't need to define these over and over anymore.
     $this
-      ->entityCondition('entity_type', 'product')
+      ->entityCondition('entity_type', 'commerce_product')
       ->propertyCondition('status', 1)
       ->propertyOrderBy('title', 'ASC');
-    // define a pager
+    // Define a pager.
 
   }
-  public function excludeNode($nid) {
-    // code snip; we'll come back to this.
-  }
+
 
 }
 
 /**
-* Create a page to manage the process
-*/
-
+ * @function Create a page to manage the process.
+ */
 function migratefix_menu() {
   $items['migratefix'] = array(
     'title' => 'Migration Fix link nodes to products for cards',
@@ -57,53 +55,92 @@ function migratefix_menu() {
   return $items;
 }
 /**
-* create a function to do the work
-*/
+ * Create a function to do the work.
+ */
 function migratefix_iteration() {
- $nodeQuery = new NodeEntityFieldQuery
-  // set the conditions
-   $nodeQuery
-    // adjust to node product type machine name you use
-    ->entityCondition('bundle', array('publication'));
-  // run the query
-    ->$nodeResults = $nodeQuery->execute();
+   $node_query = new NodeEntityFieldQuery();
+// Set the conditions.
+     $node_query
+// Adjust to node product type machine name you use.
+      ->entityCondition('bundle', array('publication'));
+// Run the query.
+      ->$node_results = $node_query->execute();
+      if (!empty($node_results['node'])) {
+  // $result['node'] keys are nids, values are stub entities.
+  $nodes = entity_load('node', array_keys($node_results['node']));
+  foreach ($nodes as $node) {
+    $node_title = $node->title;
+    //get the product id with the matching title
+    $result = db_select('commerce_product', 'c')
+    ->fields('c', array('product_id'))
+    ->condition('c.title', $node_title,'LIKE')
+    ->execute()
+    ->fetchAssoc();
+  //print_r($result);
+  foreach ($result as $row=>$row_value) {
+    if ($row = 'product_id') {
+      $product_id = $row_value;
+    }
+    //print " value of title or pid = " . $product_id;
+    //print " value of node title = " . $node_title;
+    //print " value of node nid = " . $node_nid;
+    $node = node_load($node_nid);
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $field_language = field_language('node', $node, 'field_product_reference');
+    $existing_value = $node->field_product_reference[$field_language][0]['value'];
+    field_attach_update('node', $node);
+    if (!empty($existing_value)) {
+      print $existing_value;
+       //$node->field_product_reference[0]['#value'] = $existing_value . $product_id;
+       //node_save($node);
+    }
+     else {
+    //$node->field_product_reference[0]['#value'] = $product_id;
+      print "value of field for $node_title is empty";
+    }
+  }
 
- // check there is a result
-  if (!empty($nodeResults['node'])) {
-     // iterate through the $nodelistings results node by node
-    //$nodeResults = entity_load('node', array_keys($result['node']));
-    foreach ($nodeResults as $nodeResult) {
-   // This is where the magic happens
-      $nodeTarget = array_keys($nodeResult['node']);
-      $nodeTargetNid = $nodeTarget->nid;
-      $nodeTargetTitle = $nodeTarget->title;
-    // create the search parameter for EnitityFieldQuery to use
-      $searchForTitle = '%' . $nodeTargetTitle . '%';
-      $productQuery = new ProductEntityFieldQuery
-        $productQuery
-        ->entityCondition('bundle', array('publication'))
-        ->propertyCondition('title', $searchForTitle, 'LIKE');
-      $productResults = $productQuery->execute();
-      if(!empty($productResults)) {
-    //this is where th fun begins
-        foreach ($productResults as $productResult) {
-          $productPid = $productResult->product_id
-          $nodeTarget->
-          // finally save the node to set the records
-           node_save($nodeTarget);
-        }
+
+
+   }
+
+}
+}
+// Check there is a result.
+/*if (!empty($node_results['node'])) {
+  // Iterate through the $nodelistings results node by node.
+  // $nodeResults = entity_load('node', array_keys($result['node']));.
+  foreach ($node_results as $node_result) {
+    // This is where the magic happens.
+    $node_target = array_keys($node_result['node']);
+    $node_target_nid = $node_target->nid;
+    $node_target_title = $node_target->title;
+    // Create the search parameter for EnitityFieldQuery to use.
+    $search_for_title = '%' . $node_target_title . '%';
+    $product_query = new ProductEntityFieldQuery();
+    $product_query
+      ->entityCondition('bundle', array('publication'))
+      ->propertyCondition('title', $search_for_title, 'LIKE');
+    $product_results = $product_query->execute();
+    if (!empty($product_results)) {
+      // This is where th fun begins.
+      foreach ($product_results as $product_result) {
+        $product_pid = $product_result->product_id
+        // $node_target->.
+        // Finally save the node to set the records.
+        $loaded_node = node_load($node_target_nid);
+
+        node_save($node_target);
       }
-      else {
-        $nodeOutput['status']['#markup'] = t('No results were returned.');
-      }
+    }
+    else {
+      $node_output['status']['#markup'] = t('No results were returned.');
+    }
 
 
   }
   else {
-    $nodeOutput['status']['#markup'] = t('No results were returned.');
+    $node_output['status']['#markup'] = t('No results were returned.');
   }
-
-
-
 
 }
